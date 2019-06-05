@@ -38,8 +38,8 @@ namespace Json2Lua
                 }
 
                 var json_str = File.ReadAllText(json_path);
-                //string lua_str = ConvertLua(json_str);
-                StartCovert(json_str);
+                string lua_str = StartCovert(json_str);
+
 
                 if (File.Exists(lua_path))
                 {
@@ -53,7 +53,7 @@ namespace Json2Lua
 
                 try
                 {
-                    //File.WriteAllText(lua_path, lua_str);
+                    File.WriteAllText(lua_path, lua_str);
                     Console.WriteLine("导出完成:" + lua_path);
                 }catch(Exception exc)
                 {
@@ -65,14 +65,15 @@ namespace Json2Lua
             }
         }
 
-        static void StartCovert(string json_str)
+        static string StartCovert(string json_str)
         {
             var jsonBase = JObject.Parse(json_str);
             //var luaBase = new LuaTable();
 
             var luaBaseTable = JsonObject2LuaTable(jsonBase);
 
-            Console.WriteLine("test:读取到的Lua:\n" + luaBaseTable.GetString());
+            return luaBaseTable.GetString();
+            //Console.WriteLine("test:读取到的Lua:\n" + luaBaseTable.GetString());
 
         }
 
@@ -179,160 +180,163 @@ namespace Json2Lua
             return curLuaTable;
         }
 
-        static string ConvertLua(string jsonStr)
-        {
-            jsonStr = jsonStr.Replace(" ", string.Empty);//去掉所有空格
+        //下面这些是昨天在Github看到的，后来有bug就不用了，自己撸了一套，哼唧
 
-            string lua = "return";
 
-            lua += ConvertJsonType(jsonStr);
+        //static string ConvertLua(string jsonStr)
+        //{
+        //    jsonStr = jsonStr.Replace(" ", string.Empty);//去掉所有空格
 
-            return lua;
-        }
+        //    string lua = "return";
 
-        static string ConvertJsonType(string jsonStr)
-        {
-            string tempStr = jsonStr.Replace("\n", "").Replace("\r", "");
-            string firstChar = "";
-            try
-            {
-                firstChar = tempStr.Substring(0, 2);
-            }
-            catch (System.Exception)
-            {
+        //    lua += ConvertJsonType(jsonStr);
 
-                Console.WriteLine(tempStr);
-            }
+        //    return lua;
+        //}
 
-            if (firstChar == "[{")
-            {
-                return ConvertJsonArray(jsonStr);
-            }
-            else if (firstChar[0] == '{')
-            {
-                return ConvertJsonArray(jsonStr);
-            }
-            else
-            {
-                return ConvertJsonArrayNoKey(jsonStr);
-            }
+        //static string ConvertJsonType(string jsonStr)
+        //{
+        //    string tempStr = jsonStr.Replace("\n", "").Replace("\r", "");
+        //    string firstChar = "";
+        //    try
+        //    {
+        //        firstChar = tempStr.Substring(0, 2);
+        //    }
+        //    catch (System.Exception)
+        //    {
 
-        }
+        //        Console.WriteLine(tempStr);
+        //    }
 
-        /// <summary>
-        /// 没有key的 例如[1,2,3]
-        /// </summary>
-        /// <returns></returns>
-        static string ConvertJsonArrayNoKey(string jsonStr)
-        {
-            string lastJsonStr = jsonStr.Replace("[", "{").Replace("]", "}");
-            return lastJsonStr;
-        }
+        //    if (firstChar == "[{")
+        //    {
+        //        return ConvertJsonArray(jsonStr);
+        //    }
+        //    else if (firstChar[0] == '{')
+        //    {
+        //        return ConvertJsonArray(jsonStr);
+        //    }
+        //    else
+        //    {
+        //        return ConvertJsonArrayNoKey(jsonStr);
+        //    }
 
-        static string ConvertJsonArray(string jsonStr)
-        {
-            string lastJsonStr = "";
-            var separatorIndex = jsonStr.IndexOf(':');//通过:取得所有对象
-            while (separatorIndex >= 0)
-            {
-                separatorIndex += 1;//加上冒号
-                string cutStr = jsonStr.Substring(0, separatorIndex);
-                string tempKey = "";
-                string tempValue = "";
-                for (int i = 0; i < cutStr.Length; i++)
-                {
-                    char c = cutStr[i];
-                    if (c == '[')
-                    {
-                        c = '{';
-                    }
-                    else if (c == '"')
-                    {
-                        continue;
-                    }
-                    else if (c == ':')
-                    {
-                        c = '=';
-                    }
-                    tempKey += c;
+        //}
 
-                }
-                jsonStr = jsonStr.Substring(separatorIndex);
-                int index = 0;
-                for (int i = 0; i < jsonStr.Length; i++)
-                {
+        ///// <summary>
+        ///// 没有key的 例如[1,2,3]
+        ///// </summary>
+        ///// <returns></returns>
+        //static string ConvertJsonArrayNoKey(string jsonStr)
+        //{
+        //    string lastJsonStr = jsonStr.Replace("[", "{").Replace("]", "}");
+        //    return lastJsonStr;
+        //}
 
-                    char c = jsonStr[i];
+        //static string ConvertJsonArray(string jsonStr)
+        //{
+        //    string lastJsonStr = "";
+        //    var separatorIndex = jsonStr.IndexOf(':');//通过:取得所有对象
+        //    while (separatorIndex >= 0)
+        //    {
+        //        separatorIndex += 1;//加上冒号
+        //        string cutStr = jsonStr.Substring(0, separatorIndex);
+        //        string tempKey = "";
+        //        string tempValue = "";
+        //        for (int i = 0; i < cutStr.Length; i++)
+        //        {
+        //            char c = cutStr[i];
+        //            if (c == '[')
+        //            {
+        //                c = '{';
+        //            }
+        //            else if (c == '"')
+        //            {
+        //                continue;
+        //            }
+        //            else if (c == ':')
+        //            {
+        //                c = '=';
+        //            }
+        //            tempKey += c;
 
-                    if (c == ',')
-                    {
-                        break;
-                    }
-                    else if (c == '{')
-                    {
-                        //新对象的开始
-                        string surplusStr = jsonStr.Substring(index);
-                        int bracketNum = 0;
-                        for (int j = 0; j < surplusStr.Length; j++)
-                        {
-                            if (surplusStr[j] == '{')
-                            {
-                                bracketNum++;
-                            }
-                            else if (surplusStr[j] == '}')
-                            {
-                                if (bracketNum == 1)
-                                {
-                                    string tempStr = jsonStr.Substring(index, index + j + 1);
-                                    string strResult = ConvertJsonType(tempStr);
-                                    tempValue += strResult;
-                                    index = index + j;
-                                    break;
-                                }
-                                bracketNum--;
-                            }
-                        }
-                        i = index;
-                        continue;
-                    }
-                    else if (c == '[')
-                    {
-                        string surplusStr = jsonStr.Substring(index);
-                        int bracketNum = 0;
-                        for (int j = 0; j < surplusStr.Length; j++)
-                        {
-                            if (surplusStr[j] == '[')
-                            {
-                                bracketNum++;
-                            }
-                            else if (surplusStr[j] == ']')
-                            {
-                                if (bracketNum == 1)
-                                {
-                                    string tempStr = jsonStr.Substring(index, index + j + 1);
-                                    string strResult = ConvertJsonType(tempStr);
-                                    tempValue += strResult;
-                                    index = index + j;
-                                    break;
-                                }
-                                bracketNum--;
-                            }
-                        }
-                        i = index;
-                        continue;
-                    }
-                    else if (c == ']')
-                    {
-                        c = '}';
-                    }
-                    index = i;
-                    tempValue += c;
-                }
-                lastJsonStr += tempKey + tempValue;
-                jsonStr = jsonStr.Substring(index + 1);
-                separatorIndex = jsonStr.IndexOf(':');
-            }
-            return lastJsonStr;
-        }
+        //        }
+        //        jsonStr = jsonStr.Substring(separatorIndex);
+        //        int index = 0;
+        //        for (int i = 0; i < jsonStr.Length; i++)
+        //        {
+
+        //            char c = jsonStr[i];
+
+        //            if (c == ',')
+        //            {
+        //                break;
+        //            }
+        //            else if (c == '{')
+        //            {
+        //                //新对象的开始
+        //                string surplusStr = jsonStr.Substring(index);
+        //                int bracketNum = 0;
+        //                for (int j = 0; j < surplusStr.Length; j++)
+        //                {
+        //                    if (surplusStr[j] == '{')
+        //                    {
+        //                        bracketNum++;
+        //                    }
+        //                    else if (surplusStr[j] == '}')
+        //                    {
+        //                        if (bracketNum == 1)
+        //                        {
+        //                            string tempStr = jsonStr.Substring(index, index + j + 1);
+        //                            string strResult = ConvertJsonType(tempStr);
+        //                            tempValue += strResult;
+        //                            index = index + j;
+        //                            break;
+        //                        }
+        //                        bracketNum--;
+        //                    }
+        //                }
+        //                i = index;
+        //                continue;
+        //            }
+        //            else if (c == '[')
+        //            {
+        //                string surplusStr = jsonStr.Substring(index);
+        //                int bracketNum = 0;
+        //                for (int j = 0; j < surplusStr.Length; j++)
+        //                {
+        //                    if (surplusStr[j] == '[')
+        //                    {
+        //                        bracketNum++;
+        //                    }
+        //                    else if (surplusStr[j] == ']')
+        //                    {
+        //                        if (bracketNum == 1)
+        //                        {
+        //                            string tempStr = jsonStr.Substring(index, index + j + 1);
+        //                            string strResult = ConvertJsonType(tempStr);
+        //                            tempValue += strResult;
+        //                            index = index + j;
+        //                            break;
+        //                        }
+        //                        bracketNum--;
+        //                    }
+        //                }
+        //                i = index;
+        //                continue;
+        //            }
+        //            else if (c == ']')
+        //            {
+        //                c = '}';
+        //            }
+        //            index = i;
+        //            tempValue += c;
+        //        }
+        //        lastJsonStr += tempKey + tempValue;
+        //        jsonStr = jsonStr.Substring(index + 1);
+        //        separatorIndex = jsonStr.IndexOf(':');
+        //    }
+        //    return lastJsonStr;
+        //}
     }
 }
