@@ -10,7 +10,7 @@ namespace Json2Lua
     {
         static void Main(string[] args)
         {
-            args = new string[] { @"E:\DevWork\Corala\VectorWarProject\VectorWar_Client_SVN\trunk\Assets\Game\Data\dict\CN\dict_lv.json", @"E:\DevWork\Corala\VectorWarProject\VectorWar_PD\配表\配表_CN\test.json" };
+            //args = new string[] { @"E:\DevWork\Corala\VectorWarProject\VectorWar_Client_SVN\trunk\Assets\Game\Data\dict\CN\dict_lv.json", @"E:\DevWork\Corala\VectorWarProject\VectorWar_PD\配表\配表_CN\test.json" };
             if (args.Length < 1)
             {
                 Console.WriteLine("要附带参数呀,否则我也不知道要干嘛啊，\n传入格式：\n  参数1：json文件路径（必须）\n  参数2：输出文件路径[可空]");
@@ -71,8 +71,8 @@ namespace Json2Lua
             //var luaBase = new LuaTable();
 
             var luaBaseTable = JsonObject2LuaTable(jsonBase);
-
-            return luaBaseTable.GetString();
+            var str = "return " + luaBaseTable.GetString();
+            return str;
             //Console.WriteLine("test:读取到的Lua:\n" + luaBaseTable.GetString());
 
         }
